@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import Partie
+from .models import Joueur
 from .models import Chat
 from .models import Deck
 from .models import Carte
@@ -8,7 +9,7 @@ from .models import MoteurDeJeu
 
 class JoueurSerializer(serializers.ModelSerializer):
  class Meta:
-     model = User
+     model = Joueur
      fields = ['username', 'email', 'first_name', 'last_name', 'nbr_victoire', 'nbr_defaites', 'experience']
 
 
@@ -38,10 +39,9 @@ class DeckSerializer(serializers.ModelSerializer):
 
 
 class CarteSerializer(serializers.ModelSerializer):
-   class Meta:
-       model = Carte
-       fields = ['id', 'nombre', 'couleur', 'typecarte','nomcarte']
-
+  class Meta:
+      model = Carte
+      fields = ['id', 'nombre', 'couleur', 'TypeCarte','NomCarte','est_visible']
 
 
 class MoteurDeJeuSerializer(serializers.ModelSerializer):
