@@ -9,6 +9,8 @@ from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 from rest_framework.generics import GenericAPIView
 from Carte.forms import CustomUserCreationForm
+from .models import PartieJoueur
+from .models import Deck
 
 # Django model imports
 from .models import Partie, Chat, Deck, Carte, MoteurDeJeu
@@ -54,6 +56,7 @@ class CreatePartieView(GenericAPIView):
         join_partie_view = JoinPartieView()
         join_partie_view.post(request, partie.id)
         return Response({"message": "Partie créée avec succès"}, status=201)
+    
 #Si le joueur est authentifié, que la partie existe, et que la taille maximal de la partie n'est pas atteinte, il rejoint la partie 
 class JoinPartieView(APIView):
     def post(self, request, partie_id, *args, **kwargs):
@@ -64,11 +67,16 @@ class JoinPartieView(APIView):
             return Response({"error": "Partie not found"}, status=status.HTTP_404_NOT_FOUND)
         if request.user.joueur in partie.joueurs.all():
             return Response({"error": "User already in party"}, status=status.HTTP_400_BAD_REQUEST)
-        if partie.moteur_de_jeu.id == 1 and len(partie.joueurs.all()) >= 6:
-            return Response({"error": "Maximum number of players reached"}, status=status.HTTP_400_BAD_REQUEST)
+        #if partie.moteur_de_jeu.id == 1 and len(partie.joueurs.all()) >= 6:
+            #return Response({"error": "Maximum number of players reached"}, status=status.HTTP_400_BAD_REQUEST)
         partie.joueurs.add(request.user.joueur)
+        partie_joueur = PartieJoueur.objects.get(joueur=request.user.joueur, partie=partie)
+        partie_joueur.rang_inscription = list(partie.joueurs.all()).index(request.user.joueur) + 1
+        partie_joueur.is_bot = 1
+        partie_joueur.ordre = 1
+        partie_joueur.save()
         return Response({"message": "User joined party successfully"}, status=200)
-
+    
 class QuitPartieView(APIView):
     def post(self, request, partie_id, *args, **kwargs):
         if not request.user.is_authenticated:
@@ -81,7 +89,25 @@ class QuitPartieView(APIView):
         partie.joueurs.remove(request.user.joueur)
         return Response({"message": "User left party successfully"}, status=200)
 
+class CreateDeckForAllPlayersView(APIView):
+    def post(self, request, partie_id, *args, **kwargs):
+        # Check if the user is authenticated
+        if not request.user.is_authenticated:
+            return Response({"error": "User not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
+        partie = Partie.objects.filter(id=partie_id).first() #avoir partie actuelle
+        if partie is None:
+            return Response({"error": "Partie not found"}, status=status.HTTP_404_NOT_FOUND)
+        for joueur in partie.joueurs.all():#Crée deck pour chaque joueur
+            deck = Deck.objects.create(joueur=joueur)
 
+            # Add cards to the deck
+            # Replace this with your actual logic for determining which cards to add
+            carte = Carte.objects.get(id=1)
+            deck.carte.add(carte)
+
+            deck.save()
+
+        return Response({"message": "Decks created successfully"}, status=status.HTTP_201_CREATED)
 
 class PartieDetailView(generics.RetrieveUpdateDestroyAPIView):
  queryset = Partie.objects.all()

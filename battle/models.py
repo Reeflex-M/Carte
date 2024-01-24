@@ -24,19 +24,22 @@ class Partie(models.Model):
  joueurs = models.ManyToManyField(Joueur, through='PartieJoueur') #link associatif coonne
  chat_messages = models.ManyToManyField(Chat) # Partie - Chaté
  moteur_de_jeu = models.ForeignKey(MoteurDeJeu, on_delete=models.SET_NULL, null=True) # Partie - Moteur de jeu
-
+ decks = models.ManyToManyField('Deck') # Game - Deck
   #Partie - Joueur
 class PartieJoueur(models.Model):
    partie = models.ForeignKey(Partie, on_delete=models.CASCADE)
    joueur = models.ForeignKey(Joueur, on_delete=models.CASCADE)
    rang_inscription = models.IntegerField(default=0)
    ordre = models.IntegerField(default=0)
+   is_bot = models.BooleanField(default=False)
 
 
 class Deck(models.Model):
-  id = models.AutoField(primary_key=True)
-  nombre_carte = models.IntegerField()
-  type_jeu = models.CharField(max_length=200)
+ id = models.AutoField(primary_key=True)
+ nombre_carte = models.IntegerField()
+ type_jeu = models.CharField(max_length=200)
+ cartes = models.ManyToManyField('Carte') # Deck - Card
+
 
 
 class Carte(models.Model):

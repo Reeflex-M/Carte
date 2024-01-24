@@ -4,6 +4,7 @@ from .views import CreatePartieView
 from .views import EnCoursPartieListView
 from .views import JoinPartieView
 from .views import QuitPartieView
+from .views import CreateDeckForAllPlayersView
 
 urlpatterns = [
 
@@ -23,6 +24,7 @@ urlpatterns = [
    path('api/create_partie/', CreatePartieView.as_view(), name='create_partie'),
    path('api/join_partie/<int:partie_id>/', JoinPartieView.as_view(), name='join_partie'),
    path('api/quit_partie/<int:partie_id>/', QuitPartieView.as_view(), name='quit_partie'),
+   path('create-deck/', CreateDeckForAllPlayersView.as_view(), name='create-deck'),
    path('parties/encours/', EnCoursPartieListView.as_view(), name='encours-parties'),
 
 
