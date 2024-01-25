@@ -39,6 +39,7 @@ class Deck(models.Model):
  nombre_carte = models.IntegerField()
  type_jeu = models.CharField(max_length=200)
  cartes = models.ManyToManyField('Carte') # Deck - Card
+ joueur = models.ForeignKey(Joueur, on_delete=models.CASCADE)
 
 
 
@@ -48,7 +49,9 @@ class Carte(models.Model):
  couleur = models.CharField(max_length=20)
  TypeCarte = models.CharField(max_length=20)
  NomCarte = models.CharField(max_length=20)
- moteur_de_jeu = models.ForeignKey('MoteurDeJeu', on_delete=models.CASCADE) # Carte - Moteur de jeu
+ front_image_path = models.CharField(max_length=200)
+ back_image_path = models.CharField(max_length=200)
+ moteur_de_jeu = models.ManyToManyField('MoteurDeJeu') # Carte - Moteur de jeu
  est_visible = models.BooleanField(default=False)
 
 

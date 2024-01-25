@@ -24,7 +24,7 @@ urlpatterns = [
    path('api/create_partie/', CreatePartieView.as_view(), name='create_partie'),
    path('api/join_partie/<int:partie_id>/', JoinPartieView.as_view(), name='join_partie'),
    path('api/quit_partie/<int:partie_id>/', QuitPartieView.as_view(), name='quit_partie'),
-   path('create-deck/', CreateDeckForAllPlayersView.as_view(), name='create-deck'),
+   path('api/parties/<int:partie_id>/create-deck', CreateDeckForAllPlayersView.as_view(), name='create-deck'),
    path('parties/encours/', EnCoursPartieListView.as_view(), name='encours-parties'),
 
 

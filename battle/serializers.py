@@ -41,7 +41,7 @@ class DeckSerializer(serializers.ModelSerializer):
 class CarteSerializer(serializers.ModelSerializer):
   class Meta:
       model = Carte
-      fields = ['id', 'nombre', 'couleur', 'TypeCarte','NomCarte','est_visible']
+      fields = ['id', 'nombre', 'couleur', 'TypeCarte','NomCarte','front_image_path','back_image_path','est_visible']
 
 
 class MoteurDeJeuSerializer(serializers.ModelSerializer):

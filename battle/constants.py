@@ -1,0 +1,1 @@
+BASE_IMAGE_URL = "https://cdn.jsdelivr.net/gh/Reeflex-M/cdn-carte/"
