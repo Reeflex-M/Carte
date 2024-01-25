@@ -37,9 +37,9 @@ class PartieJoueur(models.Model):
 class Deck(models.Model):
  id = models.AutoField(primary_key=True)
  nombre_carte = models.IntegerField()
- type_jeu = models.CharField(max_length=200)
  cartes = models.ManyToManyField('Carte') # Deck - Card
  joueur = models.ForeignKey(Joueur, on_delete=models.CASCADE)
+ type_jeu = models.ForeignKey('TypeJeux', on_delete=models.SET_NULL, null=True) # Deck - TypeJeux
 
 
 
@@ -51,7 +51,12 @@ class Carte(models.Model):
  NomCarte = models.CharField(max_length=20)
  front_image_path = models.CharField(max_length=200)
  back_image_path = models.CharField(max_length=200)
- moteur_de_jeu = models.ManyToManyField('MoteurDeJeu') # Carte - Moteur de jeu
+ TypeJeux = models.ForeignKey('TypeJeux', on_delete=models.SET_NULL, null=True) # Carte - Moteur de jeu
+ #moteur_de_jeu = models.ManyToManyField('MoteurDeJeu') # Carte - Moteur de jeu
  est_visible = models.BooleanField(default=False)
 
-
+class TypeJeux(models.Model):
+ nom = models.CharField(max_length=200)
+ logo = models.CharField(max_length=200)
+ path_splash = models.CharField(max_length=200)
+ moteurs_de_jeu = models.ManyToManyField('MoteurDeJeu')

@@ -12,7 +12,7 @@ from rest_framework.generics import GenericAPIView
 
 # Custom forms and models imports
 from Carte.forms import CustomUserCreationForm
-from .models import PartieJoueur, Partie, Chat, Deck, Carte, MoteurDeJeu
+from .models import PartieJoueur, Partie, Chat, Deck, Carte, MoteurDeJeu, TypeJeux
 
 # Serializer imports
 from .serializers import JoueurSerializer, PartieSerializer, ChatSerializer, DeckSerializer, CarteSerializer, MoteurDeJeuSerializer
@@ -97,7 +97,6 @@ class QuitPartieView(APIView):
         return Response({"message": "User left party successfully"}, status=200)
     
 
-# Create a deck for all players in a Partie instance
 class CreateDeckForAllPlayersView(APIView):
     """Create a deck for all players in a Partie instance"""
     def post(self, request, *args, **kwargs):
@@ -106,39 +105,24 @@ class CreateDeckForAllPlayersView(APIView):
         partie_id = self.kwargs['partie_id']
         if not Partie.objects.filter(id=partie_id).exists():
             return Response({"error": "Partie not found"}, status=status.HTTP_404_NOT_FOUND)
-        for joueur in Partie.objects.get(id=partie_id).joueurs.all(): #Crée deck pour chaque joueur
-            if Partie.objects.get(id=partie_id).moteur_de_jeu.id == 1:
-                deck = Deck.objects.create(joueur=joueur)
-            else:
-                deck = Deck.objects.create(joueur=joueur)
-            # Add cards to deck
-            carte = Carte.objects.get(id=1)
-            deck.carte.add(carte)
+        # Get random list
+        random_cards = get_random_card()
+        for joueur in Partie.objects.get(id=partie_id).joueurs.all(): #Create deck for each player
+            deck = Deck.objects.create(joueur=joueur, nombre_carte=0)
+            for card in random_cards:
+                deck.carte.add(card) 
+                random_cards.remove(card)
             deck.save()
         return Response({"message": "Decks created successfully"}, status=status.HTTP_201_CREATED)
 
 
-# Get a random card bataille game
-# class RandomCardView(APIView):
-#     """give random card"""
-#     def get(self, request, *args, **kwargs):
-#         moteur_de_jeu = MoteurDeJeu.objects.filter(id=1).first()
-#         if moteur_de_jeu is None:
-#             return Response({"error": "Game engine not found"}, status=status.HTTP_404_NOT_FOUND)
-#         cartes = Carte.objects.filter(moteur_de_jeu=moteur_de_jeu)
-#         cartes_dict = {}
-#         for carte in cartes:
-#             uid = str(uuid.uuid4())
-#             cartes_dict[uid] = carte
-#         sorted_cartes = sorted(cartes_dict.values(), key=lambda x: x.uid)
-#         serializer = CarteSerializer(sorted_cartes, many=True)
-#         return Response(serializer.data, status=status.HTTP_200_OK)
-    
+#Renvoie liste de carte aleatoire pour la bataille-52 (moteur de jeu -> 1)
 def get_random_card():
     moteur_de_jeu = MoteurDeJeu.objects.filter(id=1).first()
     if moteur_de_jeu is None:
         return {"error": "Game engine not found"}
-    cartes = Carte.objects.filter(moteur_de_jeu=moteur_de_jeu)
+    types_jeux = TypeJeux.objects.filter(moteurs_de_jeu=moteur_de_jeu)
+    cartes = Carte.objects.filter(TypeJeux__in=types_jeux)
     cartes_dict = {}
     for carte in cartes:
         uid = str(uuid.uuid4()) #temp
@@ -147,6 +131,14 @@ def get_random_card():
     serializer = CarteSerializer(sorted_cartes, many=True)
     return serializer.data
 
+
+
+class BaseImageUrlView(APIView):
+    """Return the base image URL"""
+    def get(self, request, *args, **kwargs):
+        return Response({"base_image_url": BASE_IMAGE_URL})
+    
+    
 # Detail view for Partie
 class PartieDetailView(generics.RetrieveUpdateDestroyAPIView):
     """Retrieve, update and delete Partie instances"""
