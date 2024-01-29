@@ -1,5 +1,35 @@
 from django.contrib.auth.models import User
 from django.db import models
+from django.contrib.auth.models import AbstractUser, Group, Permission
+from django.contrib.auth import get_user_model
+from django.utils.translation import gettext_lazy as _
+
+class User(AbstractUser):
+    groups = models.ManyToManyField(
+        Group,
+        verbose_name=_('groups'),
+        blank=True,
+        help_text=_(
+            'The groups this user belongs to. A user will get all permissions '
+            'granted to each of their groups.'
+        ),
+        related_name="battle_users",
+        related_query_name="battle_user",
+    )
+    user_permissions = models.ManyToManyField(
+        Permission,
+        verbose_name=_('user permissions'),
+        blank=True,
+        help_text=_('Specific permissions for this user.'),
+        related_name="battle_users",
+        related_query_name="battle_user",
+    )
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        Joueur.objects.create(user=self)
+        
+User = get_user_model()
 
 class Joueur(User):
  nbr_victoire = models.IntegerField(default=0)
@@ -7,9 +37,9 @@ class Joueur(User):
  experience = models.IntegerField(default=0)
  
 class Chat(models.Model):
- message = models.TextField()
- timestamp = models.DateTimeField(auto_now_add=True)
- joueur = models.ForeignKey(User, on_delete=models.CASCADE, related_name='chats')
+    message = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    joueur = models.ForeignKey(Joueur, on_delete=models.CASCADE, related_name='chats')
    
 class MoteurDeJeu(models.Model):
   date_creation = models.DateTimeField(auto_now_add=True)

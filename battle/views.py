@@ -12,7 +12,7 @@ from rest_framework.generics import GenericAPIView
 
 # Custom forms and models imports
 from Carte.forms import CustomUserCreationForm
-from .models import PartieJoueur, Partie, Chat, Deck, Carte, MoteurDeJeu, TypeJeux
+from .models import PartieJoueur, Partie, Chat, Deck, Carte, MoteurDeJeu, TypeJeux, Joueur
 
 # Serializer imports
 from .serializers import JoueurSerializer, PartieSerializer, ChatSerializer, DeckSerializer, CarteSerializer, MoteurDeJeuSerializer
@@ -62,30 +62,10 @@ class CreatePartieView(GenericAPIView):
         join_partie_view.post(request, partie.id)
         return Response({"message": "Partie créée avec succès"}, status=201)
 
-class CreateDeckForAllPlayersView(APIView):
-    """Create a deck for all players in a Partie instance"""
-    def post(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            return Response({"error": "User not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
-        partie_id = self.kwargs['partie_id']
-        if not Partie.objects.filter(id=partie_id).exists():
-            return Response({"error": "Partie not found"}, status=status.HTTP_404_NOT_FOUND)
-        # Get random list
-        random_cards = get_random_card()
-        num_players = len(Partie.objects.get(id=partie_id).joueurs.all())
-        num_cards_per_player = 32 // num_players
-        for i, joueur in enumerate(Partie.objects.get(id=partie_id).joueurs.all()): #Parcours tout les joueurs d'une partie spécifié
-            deck = Deck.objects.create(joueur=joueur, nombre_carte=0)
-            for j in range(i*num_cards_per_player, (i+1)*num_cards_per_player):
-                card = Carte.objects.get(id=random_cards[j]['id'])
-                deck.cartes.add(card)
-            deck.save()
-        return Response({"message": "Decks created successfully"}, status=status.HTTP_201_CREATED)
     
 
-# Si le joueur est authentifié, que la partie existe, et que la taille maximal de la partie n'est pas atteinte, il rejoint la partie 
 class JoinPartieView(APIView):
-    """Join a Partie instance"""
+    """Join a Partie instance if the player is auth, if size_game < max"""
     def post(self, request, partie_id, *args, **kwargs):
         if not request.user.is_authenticated:
             return Response({"error": "User not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -118,7 +98,7 @@ class QuitPartieView(APIView):
     
 
 class CreateDeckForAllPlayersView(APIView):
-    """Create a deck for all players in a Partie instance"""
+    """Create a deck for all players in a Partie instance, bataille-54 only"""
     def post(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return Response({"error": "User not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -126,17 +106,20 @@ class CreateDeckForAllPlayersView(APIView):
         if not Partie.objects.filter(id=partie_id).exists():
             return Response({"error": "Partie not found"}, status=status.HTTP_404_NOT_FOUND)
         # Get random list
-        random_cards = get_random_card()
-        for joueur in Partie.objects.get(id=partie_id).joueurs.all(): #Create deck for each player
+        random_cards = get_random_card() 
+        num_players = len(Partie.objects.get(id=partie_id).joueurs.all())
+        num_cards_per_player = 32 // num_players
+        for i, joueur in enumerate(Partie.objects.get(id=partie_id).joueurs.all()): #Parcours tout les joueurs d'une partie spécifié
             deck = Deck.objects.create(joueur=joueur, nombre_carte=0)
-            for card in random_cards:
-                deck.cartes.add(card)
-                random_cards.remove(card)
+            for j in range(i*num_cards_per_player, (i+1)*num_cards_per_player):  # -> 4player, index 0,4 +1 -> 1-5, 6-10...
+                card = Carte.objects.get(id=random_cards[j]['id'])
+                deck.cartes.add(card) # -> ajoute enregistrement dans deck_cartes
             deck.save()
         return Response({"message": "Decks created successfully"}, status=status.HTTP_201_CREATED)
 
-#Renvoie liste de carte aleatoire pour la bataille-52 (moteur de jeu -> 1)
+
 def get_random_card():
+    """Renvoie liste de carte aleatoire pour la bataille-52 (moteur de jeu -> 1)"""
     moteur_de_jeu = MoteurDeJeu.objects.filter(id=1).first()
     if moteur_de_jeu is None:
         return {"error": "Game engine not found"}
@@ -211,6 +194,7 @@ class LoginView(APIView):
             return Response({"token": token.key})
         else:
             return Response({"error": "Wrong Credentials"}, status=status.HTTP_400_BAD_REQUEST)
+
 
 class RegisterView(APIView):
     """Register view"""
