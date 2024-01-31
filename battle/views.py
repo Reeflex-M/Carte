@@ -55,7 +55,7 @@ class CreatePartieView(GenericAPIView):
             date_debut=date_debut,
             date_fin=date_fin,
             moteur_de_jeu=moteur_de_jeu,
-            statut='en cours'
+            statut='joignable'
         )
         # Call JoinPartieView function
         join_partie_view = JoinPartieView()
@@ -77,7 +77,7 @@ class JoinPartieView(APIView):
         partie.joueurs.add(request.user.joueur)
         partie_joueur = PartieJoueur.objects.get(joueur=request.user.joueur, partie=partie)
         partie_joueur.rang_inscription = list(partie.joueurs.all()).index(request.user.joueur) + 1
-        partie_joueur.is_bot = 1
+        partie_joueur.is_bot = 0
         partie_joueur.ordre = 1
         partie_joueur.save()
         return Response({"message": "User joined party successfully"}, status=200)
@@ -108,7 +108,7 @@ class CreateDeckForAllPlayersView(APIView):
         # Get random list
         random_cards = get_random_card() 
         num_players = len(Partie.objects.get(id=partie_id).joueurs.all())
-        num_cards_per_player = 32 // num_players
+        num_cards_per_player = 52 // num_players
         for i, joueur in enumerate(Partie.objects.get(id=partie_id).joueurs.all()): #Parcours tout les joueurs d'une partie spécifié
             deck = Deck.objects.create(joueur=joueur, nombre_carte=0)
             for j in range(i*num_cards_per_player, (i+1)*num_cards_per_player):  # -> 4player, index 0,4 +1 -> 1-5, 6-10...
@@ -136,6 +136,22 @@ def get_random_card():
 
 
 
+from django.contrib.auth.models import User
+from .models import Joueur
+
+class LancerPartieView(APIView):
+    def post(self, request, partie_id):
+        try:
+            partie = Partie.objects.get(id=partie_id)
+            partie.lancer_partie()
+            if len(partie.joueurs.all()) == 1:
+                user = User.objects.get(id=10)
+                joueur = Joueur.objects.get(user=user)
+                partie.joueurs.add(joueur)
+            return Response({"message": "La partie a été lancée avec succès"}, status=200)
+        except Partie.DoesNotExist:
+            return Response({"error": "Partie not found"}, status=status.HTTP_404_NOT_FOUND)
+
 class BaseImageUrlView(APIView):
     """Return the base image URL"""
     def get(self, request, *args, **kwargs):
@@ -149,12 +165,12 @@ class PartieDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = PartieSerializer
 
 # List view for Parties in progress
-class EnCoursPartieListView(generics.ListAPIView):
+class JoignablePartieListView(generics.ListAPIView):
     """List Partie instances in progress"""
     serializer_class = PartieSerializer
 
     def get_queryset(self):
-        return Partie.objects.filter(statut='en cours')
+        return Partie.objects.filter(statut='joignable')
 
 # Views entity Chat
 class ChatViewSet(viewsets.ModelViewSet):
@@ -203,6 +219,7 @@ class RegisterView(APIView):
         if serializer.is_valid():
             user = serializer.save()
             if user:
+                Joueur.objects.create(user=user)
                 token = Token.objects.create(user=user)
                 json = serializer.data
                 json['token'] = token.key
