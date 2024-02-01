@@ -5,7 +5,7 @@ from django.utils.translation import gettext_lazy as _
 # Player model
 class Joueur(models.Model):
     id = models.AutoField(primary_key=True)
-    user = models.OneToOneField(User, on_delete=models.SET_NULL, null=True, db_column='user_ptr_id')
+    user = models.OneToOneField(User, on_delete=models.SET_NULL, null=True, related_name='joueur')
     nbr_victoire = models.IntegerField(default=0)
     nbr_defaites = models.IntegerField(default=0)
     experience = models.IntegerField(default=0)
@@ -44,7 +44,6 @@ class PartieJoueur(models.Model):
     joueur = models.ForeignKey(Joueur, on_delete=models.CASCADE)
     rang_inscription = models.IntegerField(default=0)
     ordre = models.IntegerField(default=0)
-    is_bot = models.BooleanField(default=False)
 
 # Deck model
 class Deck(models.Model):

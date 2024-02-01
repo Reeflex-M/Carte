@@ -2,13 +2,21 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import Partie, Joueur, Chat, Deck, Carte, MoteurDeJeu
 
+
+# User Serializer
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'first_name', 'last_name']
+        
+        
 # Player Serializer
 class JoueurSerializer(serializers.ModelSerializer):
-    user_id = serializers.IntegerField(source='user.id', read_only=True)
+    user = UserSerializer(read_only=True)
 
     class Meta:
         model = Joueur
-        fields = ['id','user_id','nbr_victoire', 'nbr_defaites', 'experience']
+        fields = ['id', 'user', 'nbr_victoire', 'nbr_defaites', 'experience']
 
 # Game Serializer
 class PartieSerializer(serializers.ModelSerializer):
@@ -34,7 +42,7 @@ class DeckSerializer(serializers.ModelSerializer):
 class CarteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Carte
-        fields = ['id', 'nombre', 'couleur', 'TypeCarte','NomCarte','front_image_path','back_image_path','est_visible']
+        fields = ['id', 'nombre', 'couleur', 'TypeCarte','NomCarte','front_image_path','back_image_path','TypeJeux','est_visible']
 
 # Game Engine Serializer
 class MoteurDeJeuSerializer(serializers.ModelSerializer):
@@ -42,14 +50,3 @@ class MoteurDeJeuSerializer(serializers.ModelSerializer):
         model = MoteurDeJeu
         fields = ['id', 'date_creation', 'libelle']
 
-# User Serializer
-class UserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
-
-    class Meta:
-        model = User
-        fields = ('id', 'username', 'password', 'first_name', 'last_name', 'email')
-
-    def create(self, validated_data):
-        user = User.objects.create_user(**validated_data)
-        return user

@@ -25,12 +25,12 @@ from .constants import BASE_IMAGE_URL
 # Views entity Joueur
 class JoueurListView(generics.ListCreateAPIView):
     """List and create Joueur instances"""
-    queryset = User.objects.all()
+    queryset = Joueur.objects.all() # Récupère tous les objets Joueur
     serializer_class = JoueurSerializer
 
 class JoueurDetailView(generics.RetrieveUpdateDestroyAPIView):
     """Retrieve, update and delete Joueur instances"""
-    queryset = User.objects.all()
+    queryset = Joueur.objects.all()
     serializer_class = JoueurSerializer
 
 # Views entity Partie
@@ -57,11 +57,14 @@ class CreatePartieView(GenericAPIView):
             moteur_de_jeu=moteur_de_jeu,
             statut='joignable'
         )
-        # Call JoinPartieView function
+        # Get the Joueur instance associated with the current user using the 'user' field
+        joueur = Joueur.objects.filter(user=request.user).first()
+        if not joueur:
+            return Response({"error": "Player not found for this user"}, status=status.HTTP_404_NOT_FOUND)
+        # Call JoinPartieView function with the Joueur instance
         join_partie_view = JoinPartieView()
-        join_partie_view.post(request, partie.id)
+        join_partie_view.post(request, partie.id) # Corrected call to post method
         return Response({"message": "Partie créée avec succès"}, status=201)
-
     
 
 class JoinPartieView(APIView):
@@ -69,15 +72,18 @@ class JoinPartieView(APIView):
     def post(self, request, partie_id, *args, **kwargs):
         if not request.user.is_authenticated:
             return Response({"error": "User not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
+        # Get the Joueur instance associated with the current user using the 'user' field
+        joueur = Joueur.objects.filter(user=request.user).first()
+        if not joueur:
+            return Response({"error": "Player not found for this user"}, status=status.HTTP_404_NOT_FOUND)
         partie = Partie.objects.filter(id=partie_id).first()
         if partie is None:
             return Response({"error": "Partie not found"}, status=status.HTTP_404_NOT_FOUND)
-        if request.user.joueur in partie.joueurs.all():
+        if joueur in partie.joueurs.all():
             return Response({"error": "User already in party"}, status=status.HTTP_400_BAD_REQUEST)
-        partie.joueurs.add(request.user.joueur)
-        partie_joueur = PartieJoueur.objects.get(joueur=request.user.joueur, partie=partie)
-        partie_joueur.rang_inscription = list(partie.joueurs.all()).index(request.user.joueur) + 1
-        partie_joueur.is_bot = 0
+        partie.joueurs.add(joueur)
+        partie_joueur = PartieJoueur.objects.get(joueur=joueur, partie=partie)
+        partie_joueur.rang_inscription = list(partie.joueurs.all()).index(joueur) + 1
         partie_joueur.ordre = 1
         partie_joueur.save()
         return Response({"message": "User joined party successfully"}, status=200)
@@ -136,8 +142,6 @@ def get_random_card():
 
 
 
-from django.contrib.auth.models import User
-from .models import Joueur
 
 class LancerPartieView(APIView):
     def post(self, request, partie_id):
