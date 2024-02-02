@@ -9,6 +9,8 @@ from rest_framework.views import APIView
 from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 from rest_framework.generics import GenericAPIView
+import logging
+logger = logging.getLogger(__name__)
 
 # Custom forms and models imports
 from Carte.forms import CustomUserCreationForm
@@ -106,31 +108,36 @@ class QuitPartieView(APIView):
 class CreateDeckForAllPlayersView(APIView):
     """Create a deck for all players in a Partie instance, bataille-54 only"""
     def post(self, request, *args, **kwargs):
+        # Log the beginning of the method execution
+        logger.debug("Entering CreateDeckForAllPlayersView.post")
         if not request.user.is_authenticated:
             return Response({"error": "User not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         partie_id = self.kwargs['partie_id']
-        if not Partie.objects.filter(id=partie_id).exists():
+        partie = Partie.objects.filter(id=partie_id).first()
+        if not partie:
             return Response({"error": "Partie not found"}, status=status.HTTP_404_NOT_FOUND)
         # Get random list
-        random_cards = get_random_card() 
-        num_players = len(Partie.objects.get(id=partie_id).joueurs.all())
+        random_cards = get_random_card_bataille_52() 
+        num_players = len(partie.joueurs.all())
         num_cards_per_player = 52 // num_players
-        for i, joueur in enumerate(Partie.objects.get(id=partie_id).joueurs.all()): #Parcours tout les joueurs d'une partie spécifié
+        logger.debug(f"Random cards: {random_cards}")
+        logger.debug(f"Number of cards per player: {num_cards_per_player}")
+
+        for i, joueur in enumerate(partie.joueurs.all()): #Parcours tout les joueurs d'une partie spécifié
             deck = Deck.objects.create(joueur=joueur, nombre_carte=0)
-            for j in range(i*num_cards_per_player, (i+1)*num_cards_per_player):  # -> 4player, index 0,4 +1 -> 1-5, 6-10...
+            for j in range(i*num_cards_per_player, (i+1)*num_cards_per_player): # -> 4player, index 0,4 +1 -> 1-5, 6-10...
                 card = Carte.objects.get(id=random_cards[j]['id'])
                 deck.cartes.add(card) # -> ajoute enregistrement dans deck_cartes
-            deck.save()
+            # Ajoute le deck à la partie
+            partie.decks.add(deck)
         return Response({"message": "Decks created successfully"}, status=status.HTTP_201_CREATED)
 
 
-def get_random_card():
-    """Renvoie liste de carte aleatoire pour la bataille-52 (moteur de jeu -> 1)"""
-    moteur_de_jeu = MoteurDeJeu.objects.filter(id=1).first()
-    if moteur_de_jeu is None:
-        return {"error": "Game engine not found"}
-    types_jeux = TypeJeux.objects.filter(moteurs_de_jeu=moteur_de_jeu)
-    cartes = Carte.objects.filter(TypeJeux__in=types_jeux)
+def get_random_card_bataille_52():
+    """Renvoie liste de carte aleatoire pour la bataille-52 (typejeux_id -> 1)"""
+    cartes = Carte.objects.filter(TypeJeux__id=1)
+    if not cartes.exists():
+        return {"error": "No cards found with typejeux_id equal to 1"}
     cartes_dict = {}
     for carte in cartes:
         uid = str(uuid.uuid4()) #temp
@@ -138,6 +145,8 @@ def get_random_card():
     sorted_keys = sorted(cartes_dict.keys())
     sorted_cartes = [cartes_dict[key] for key in sorted_keys]
     serializer = CarteSerializer(sorted_cartes, many=True)
+    # Log the result
+    logger.debug(f"Result of get_random_card_bataille_52: {serializer.data}")
     return serializer.data
 
 
