@@ -158,8 +158,7 @@ class LancerPartieView(APIView):
             partie = Partie.objects.get(id=partie_id)
             partie.lancer_partie()
             if len(partie.joueurs.all()) == 1:
-                user = User.objects.get(id=10)
-                joueur = Joueur.objects.get(user=user)
+                joueur = Joueur.objects.get(id=1) # Assurez-vous que l'ID est correct
                 partie.joueurs.add(joueur)
             return Response({"message": "La partie a été lancée avec succès"}, status=200)
         except Partie.DoesNotExist:
