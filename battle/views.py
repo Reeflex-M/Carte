@@ -24,7 +24,7 @@ from .serializers import JoueurSerializer, PartieSerializer, ChatSerializer, Dec
 from django.utils import timezone
 from django.http import HttpResponse
 from .constants import BASE_IMAGE_URL
-from .constants import SPLASH_SOLITAIRE, SPLASH_BATAILLE
+from .constants import SPLASH_SOLITAIRE, SPLASH_BATAILLE,SPLASH_POKEMON,SPLASH_MORPION,SPLASH_ORIFLAMME
 
 # Views entity Joueur
 class JoueurListView(generics.ListCreateAPIView):
@@ -204,7 +204,10 @@ class CarouselSplashUrlView(APIView):
     def get(self, request, *args, **kwargs):
         splash_images = {
             'solitaire': {'url': SPLASH_SOLITAIRE, 'type': 'solo', 'name': 'solitaire'},
-            'bataille': {'url': SPLASH_BATAILLE, 'type': 'multi', 'name': 'bataille'}
+            'bataille': {'url': SPLASH_BATAILLE, 'type': 'multi', 'name': 'bataille'},
+            'pokemon': {'url': SPLASH_POKEMON, 'type': 'multi', 'name': 'pokemon'},
+            'morpion': {'url': SPLASH_MORPION, 'type': 'multi', 'name': 'morpion'},
+            'oriflamme': {'url': SPLASH_ORIFLAMME, 'type': 'multi', 'name': 'oriflamme'}
         }
         return Response(splash_images)
     
