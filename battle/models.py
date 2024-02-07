@@ -9,6 +9,8 @@ class Joueur(models.Model):
     nbr_victoire = models.IntegerField(default=0)
     nbr_defaites = models.IntegerField(default=0)
     experience = models.IntegerField(default=0)
+    profil_image_path = models.CharField(max_length=200, default="https://cdn.jsdelivr.net/gh/Reeflex-M/cdn-carte@master/Profil-picture/19.png")
+    
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)

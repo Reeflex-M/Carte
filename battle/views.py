@@ -10,6 +10,7 @@ from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 from rest_framework.generics import GenericAPIView
 import logging
+import random
 logger = logging.getLogger(__name__)
 
 # Custom forms and models imports
@@ -23,6 +24,7 @@ from .serializers import JoueurSerializer, PartieSerializer, ChatSerializer, Dec
 from django.utils import timezone
 from django.http import HttpResponse
 from .constants import BASE_IMAGE_URL
+from .constants import SPLASH_SOLITAIRE, SPLASH_BATAILLE
 
 # Views entity Joueur
 class JoueurListView(generics.ListCreateAPIView):
@@ -150,6 +152,30 @@ def get_random_card_bataille_52():
     return serializer.data
 
 
+def generate_unique_order_numbers(n):
+    """Génère n nombres aléatoires uniques entre 1 et n."""
+    order_numbers = set()
+    while len(order_numbers) < n:
+        order_numbers.add(random.randint(1, n))
+    return list(order_numbers)
+
+class UpdateOrderInPartieJoueurView(APIView):
+    """Met à jour la colonne 'ordre' dans la table 'carte_partiejoueur'."""
+    def post(self, request, partie_id):
+        try:
+            partie = Partie.objects.get(id=partie_id)
+            joueurs = partie.joueurs.all()
+            num_joueurs = len(joueurs)
+            unique_order_numbers = generate_unique_order_numbers(num_joueurs)
+
+            for joueur, order_number in zip(joueurs, unique_order_numbers):
+                partie_joueur = PartieJoueur.objects.get(joueur=joueur, partie=partie)
+                partie_joueur.ordre = order_number
+                partie_joueur.save()
+
+            return Response({"message": "Les ordres ont été mis à jour avec succès"}, status=200)
+        except Partie.DoesNotExist:
+            return Response({"error": "Partie not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
 class LancerPartieView(APIView):
@@ -160,6 +186,8 @@ class LancerPartieView(APIView):
             if len(partie.joueurs.all()) == 1:
                 joueur = Joueur.objects.get(id=1) # Assurez-vous que l'ID est correct
                 partie.joueurs.add(joueur)
+            update_order_view = UpdateOrderInPartieJoueurView()
+            update_order_view.post(request, partie_id)
             return Response({"message": "La partie a été lancée avec succès"}, status=200)
         except Partie.DoesNotExist:
             return Response({"error": "Partie not found"}, status=status.HTTP_404_NOT_FOUND)
@@ -168,6 +196,16 @@ class BaseImageUrlView(APIView):
     """Return the base image URL"""
     def get(self, request, *args, **kwargs):
         return Response({"base_image_url": BASE_IMAGE_URL})
+    
+
+class CarouselSplashUrlView(APIView):
+    """Return the base image URL"""
+    def get(self, request, *args, **kwargs):
+        splash_images = {
+            'solitaire': SPLASH_SOLITAIRE,
+            'bataille': SPLASH_BATAILLE
+        }
+        return Response(splash_images)
     
     
 # Detail view for Partie

@@ -1,0 +1,23 @@
+{
+    "players": [
+        {"id": 1, "name": "Player1", "score": 0, "hand": ["As", "Roi", "Dame"]},
+        {"id": 2, "name": "Player2", "score": 0, "hand": ["Valet", "Dix", "Neuf"]}
+    ],
+    "table": {
+        "top_card": "As",
+        "played_cards": [
+            {"player_id": 1, "card": "As"},
+            {"player_id": 2, "card": "Valet"}
+        ]
+    },
+    "current_turn": {
+        "player_id": 1,
+        "can_play": True
+    },
+    "rules": {
+        "highest_card_wins": True,
+        "trump_suit": "Spades",
+        "trick_points": 10
+    },
+    "game_over": False
+}

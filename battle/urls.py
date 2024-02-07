@@ -6,7 +6,7 @@ from .views import (
     ChatViewSet, DeckListCreateView, CarteViewSet, MoteurDeJeuViewSet, 
     CreatePartieView, JoignablePartieListView, JoinPartieView, QuitPartieView, 
     CreateDeckForAllPlayersView, BaseImageUrlView,
-    LancerPartieView
+    LancerPartieView, CarouselSplashUrlView
 )
 
 urlpatterns = [
@@ -24,6 +24,7 @@ urlpatterns = [
 
     # Games features
     path('api/base-image-url', BaseImageUrlView.as_view()), #OK
+    path('api/carousel-splash-url', CarouselSplashUrlView.as_view()), #OK
     path('api/create_partie/', CreatePartieView.as_view(), name='create_partie'), # -> insertion player not good
     path('api/join_partie/<int:partie_id>/', JoinPartieView.as_view(), name='join_partie'), # ok
     path('api/quit_partie/<int:partie_id>/', QuitPartieView.as_view(), name='quit_partie'), #OK
