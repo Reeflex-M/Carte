@@ -198,12 +198,13 @@ class BaseImageUrlView(APIView):
         return Response({"base_image_url": BASE_IMAGE_URL})
     
 
+
 class CarouselSplashUrlView(APIView):
-    """Return the base image URL"""
+    """Return the base image URL along with the game type"""
     def get(self, request, *args, **kwargs):
         splash_images = {
-            'solitaire': SPLASH_SOLITAIRE,
-            'bataille': SPLASH_BATAILLE
+            'solitaire': {'url': SPLASH_SOLITAIRE, 'type': 'solo', 'name': 'solitaire'},
+            'bataille': {'url': SPLASH_BATAILLE, 'type': 'multi', 'name': 'bataille'}
         }
         return Response(splash_images)
     
