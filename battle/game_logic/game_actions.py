@@ -1,14 +1,18 @@
 # battle/game_logic/game_actions.py
 from ..models import PartieJoueur, Partie
 from django.core.exceptions import ObjectDoesNotExist
-# game_logic/game_actions.py
-
+from channels.db import database_sync_to_async
 from .game import determine_next_player_bataille54 # Importez la méthode calculate_score
 
+@database_sync_to_async
 def determine_next_player(partie):
-    if partie.moteur_de_jeu != 1:
-        determine_next_player_bataille54(partie);
-
+    if partie.moteur_de_jeu ==  1:
+        return determine_next_player_bataille54(partie)
+    else:
+        # Implémentez la logique pour d'autres moteurs de jeu  ici
+        pass
+        
+@database_sync_to_async
 def game_state():
     return {
         "players": [],
@@ -24,16 +28,15 @@ def game_state():
         },
     }
     
-from django.core.exceptions import ObjectDoesNotExist
 
-def get_all_players():
+@database_sync_to_async
+def get_all_players(partie_id):
     try:
-        # Assuming PartieJoueur is the model representing players in your game
-        return PartieJoueur.objects.all()
+        return PartieJoueur.objects.filter(partie_id=partie_id)
     except ObjectDoesNotExist:
-        # Handle the case where no players are found
         return []
-
+    
+@database_sync_to_async   
 def update_game_state(player, game_state):
     game_state["current_turn"]["player_id"] = player.id
     players = get_all_players()
@@ -56,17 +59,17 @@ def update_game_state(player, game_state):
         game_state["game_over"] = True
     return game_state
 
-
-def pass_turn():
-    # Logique pour passer le tour
-    # ...
+@database_sync_to_async
+def pass_turn(partie):
+    next_player = determine_next_player(partie)
     return next_player
 
+@database_sync_to_async
 def play_card(card):
-    # Logique pour jouer une carte
-    # ...
+    updated_game_state = update_game_state(card, partie)
     return updated_game_state
 
+@database_sync_to_async
 def prepare_next_turn():
     # Logique pour préparer le prochain tour
     # ...

@@ -1,12 +1,21 @@
-from ..models import PartieJoueur, Partie
+from channels.db import database_sync_to_async
+from ..models import Partie, PartieJoueur, Joueur
 
+@database_sync_to_async
 def determine_next_player_bataille54(partie):
-    # Utiliser l'ID de la partie pour récupérer les joueurs
-    partie_id = partie.id
-    joueurs = PartieJoueur.objects.filter(partie_id=partie_id).order_by('ordre')
-    current_player = joueurs.last()
-    if current_player.ordre == joueurs.count(): # Si le joueur actuel est le dernier de la liste, le prochain joueur est le premier
-        next_player = joueurs.first().joueur
-    else:
-        next_player = joueurs.filter(ordre=current_player.ordre + 1).first().joueur
+    partie.ordre +=   1
+    joueurs = PartieJoueur.objects.filter(partie_id=partie.id).order_by('ordre')
+    if partie.ordre > joueurs.count():
+        partie.ordre =   1
+    partie.save()
+    next_player = joueurs.get(ordre=partie.ordre).joueur
     return next_player
+
+
+
+
+
+
+
+
+
