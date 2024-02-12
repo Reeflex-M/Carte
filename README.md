@@ -1,7 +1,7 @@
  # DOCUMENTATION DE L'API BACKEND
 
 ## Partie
-![Description du GIF](https://media.giphy.com/media/R6gvnAxj2ISzJdbA63/giphy.gif)
+
 ### Liste des parties
 GET /partie/
 
