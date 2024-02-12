@@ -34,7 +34,6 @@ Description : Récupère les détails d'un moteur de jeu spécifique, identifié
 Paramètres : {moteur_id} - L'identifiant unique du moteur de jeu.
 Réponse : Un objet JSON représentant le moteur de jeu, avec ses caractéristiques détaillées, y compris les règles, les modes de jeu, et les options de configuration.
 
-
 ## Joueurs
 ### Liste des joueurs
 GET /joueurs/
