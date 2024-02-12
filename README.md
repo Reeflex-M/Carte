@@ -5,7 +5,7 @@
 ### Liste des parties
 ```python
 /partie/
-
+```
 
 Description : Récupère une liste de toutes les parties actives, avec leurs caractéristiques détaillées.
 Réponse : Un tableau JSON contenant les objets de partie, chacun avec son ID, son statut, les joueurs impliqués, et d'autres informations pertinentes.
