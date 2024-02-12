@@ -1,7 +1,7 @@
  # DOCUMENTATION DE L'API BACKEND
-___________________________________________________________________________________________
-Partie
-Liste des parties
+
+## Partie
+### Liste des parties
 GET /partie/
 ↓↓↓
 Description : Récupère une liste de toutes les parties actives, avec leurs caractéristiques détaillées.
