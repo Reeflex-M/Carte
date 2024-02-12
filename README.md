@@ -1,5 +1,5 @@
  # DOCUMENTATION DE L'API BACKEND
-<img src="https://media.giphy.com/media/R6gvnAxj2ISzJdbA63/giphy.gif" alt="Description du GIF" width="480" height="480"/>
+
 ## Partie
 ### Liste des parties
 GET /partie/
