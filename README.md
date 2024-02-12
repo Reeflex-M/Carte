@@ -1,5 +1,5 @@
  # DOCUMENTATION DE L'API BACKEND
-
+<iframe src="https://giphy.com/embed/R6gvnAxj2ISzJdbA63" width="480" height="480" frameBorder="0" class="giphy-embed" allowFullScreen></iframe><p><a href="https://giphy.com/gifs/warnerbrosde-R6gvnAxj2ISzJdbA63">via GIPHY</a></p>
 ## Partie
 ### Liste des parties
 GET /partie/
