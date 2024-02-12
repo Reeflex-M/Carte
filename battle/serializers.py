@@ -16,7 +16,7 @@ class JoueurSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Joueur
-        fields = ['id', 'user', 'nbr_victoire', 'nbr_defaites', 'experience','profil_image_path']
+        fields = ['id', 'user', 'nbr_victoire', 'nbr_defaites', 'experience','pseudo','profil_image_path']
 
 # Game Serializer
 class PartieSerializer(serializers.ModelSerializer):
@@ -24,7 +24,7 @@ class PartieSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Partie
-        fields = ['id', 'date_debut', 'date_fin', 'statut', 'joueurs']
+        fields = ['id', 'date_debut', 'date_fin', 'statut', 'joueurs','gestionnaire_tour_id']
 
 # Chat Serializer
 class ChatSerializer(serializers.ModelSerializer):

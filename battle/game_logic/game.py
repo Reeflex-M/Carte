@@ -2,7 +2,7 @@ from channels.db import database_sync_to_async
 from ..models import Partie, PartieJoueur, Joueur
 
 @database_sync_to_async
-def determine_next_player_bataille54(partie):
+def determine_mode_horaire(partie):
     partie.ordre +=   1
     joueurs = PartieJoueur.objects.filter(partie_id=partie.id).order_by('ordre')
     if partie.ordre > joueurs.count():

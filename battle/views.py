@@ -59,7 +59,8 @@ class CreatePartieView(GenericAPIView):
             date_debut=date_debut,
             date_fin=date_fin,
             moteur_de_jeu=moteur_de_jeu,
-            statut='joignable'
+            statut='joignable',
+            gestionnaire_tour_id=1
         )
         # Get the Joueur instance associated with the current user using the 'user' field
         joueur = Joueur.objects.filter(user=request.user).first()

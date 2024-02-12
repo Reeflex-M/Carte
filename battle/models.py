@@ -9,11 +9,17 @@ class Joueur(models.Model):
     nbr_victoire = models.IntegerField(default=0)
     nbr_defaites = models.IntegerField(default=0)
     experience = models.IntegerField(default=0)
+    pseudo = models.CharField(max_length=200)
     profil_image_path = models.CharField(max_length=200, default="https://cdn.jsdelivr.net/gh/Reeflex-M/cdn-carte@master/Profil-picture/19.png")
-    
 
     def save(self, *args, **kwargs):
+        if not self.pk:  # Check if the object is being created
+            self.pseudo = self.generate_default_pseudo()
         super().save(*args, **kwargs)
+
+    @staticmethod
+    def generate_default_pseudo():
+        return f"GUEST{Joueur.objects.count() +  1}"
 # Chat model
 class Chat(models.Model):
     message = models.TextField()
@@ -31,6 +37,7 @@ class Partie(models.Model):
     date_debut = models.DateTimeField()
     date_fin = models.DateTimeField(null=True, blank=True)
     statut = models.CharField(max_length=200)
+    gestionnaire_tour_id = models.IntegerField(default=0)
     joueurs = models.ManyToManyField(Joueur, through='PartieJoueur') # link associative column
     chat_messages = models.ManyToManyField(Chat) # Game - Chat
     moteur_de_jeu = models.ForeignKey(MoteurDeJeu, on_delete=models.SET_NULL, null=True) # Game - Game engine

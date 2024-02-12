@@ -2,12 +2,12 @@
 from ..models import PartieJoueur, Partie
 from django.core.exceptions import ObjectDoesNotExist
 from channels.db import database_sync_to_async
-from .game import determine_next_player_bataille54 # Importez la méthode calculate_score
+from .game import determine_mode_horaire # Importez la méthode calculate_score
 
 @database_sync_to_async
 def determine_next_player(partie):
     if partie.moteur_de_jeu ==  1:
-        return determine_next_player_bataille54(partie)
+        return determine_mode_horaire(partie)
     else:
         # Implémentez la logique pour d'autres moteurs de jeu  ici
         pass

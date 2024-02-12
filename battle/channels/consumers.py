@@ -34,15 +34,14 @@ class GameConsumer(AsyncWebsocketConsumer):
 
         if message == 'start_turn':
             # Logique pour commencer un tour
-            #next_player = await determine_next_player(partie)
-            # Initialisez l'état du jeu si nécessaire, sinon utilisez l'état existant
-            game_state = {}  # Ou utilisez une valeur par défaut ou récupérez l'état existant
-            #game_state = await update_game_state(next_player, game_state)  # Utilisez 'await'   ici
-        #     await self.send(text_data=json.dumps({
-        #     'message': 'Turn started',
-        #     'next_player': next_player.name,  # Assuming next_player has a name attribute
-        #     # Include any other relevant data in the response
-        # }))
+            next_player = await determine_next_player(partie)
+            if next_player is not None:
+                game_state = await update_game_state(next_player, game_state)
+                await self.send(text_data=json.dumps({
+                    'message': 'Turn started',
+                    'next_player': next_player.name,
+            # Include any other relevant data in the response
+        }))
         elif message == 'pass_turn':
             # Logique pour passer le tour
             next_player = pass_turn() # Fonction hypothétique pour passer le tour
