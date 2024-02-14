@@ -12,7 +12,7 @@ from rest_framework.generics import GenericAPIView
 import logging
 import random
 logger = logging.getLogger(__name__)
-
+from .models import StatutPartie
 # Custom forms and models imports
 from Carte.forms import CustomUserCreationForm
 from .models import PartieJoueur, Partie, Chat, Deck, Carte, MoteurDeJeu, TypeJeux, Joueur
@@ -52,14 +52,15 @@ class CreatePartieView(GenericAPIView):
             return Response({"error": "User not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         date_debut = timezone.now()
         date_fin = None
-        moteur_de_jeu = MoteurDeJeu.objects.filter(id=1).first() # Get MoteurDeJeu with ID 1
-        if moteur_de_jeu is None:  
-            moteur_de_jeu = None # Set moteur_de_jeu to None if it doesn't exist
+        type_jeu = TypeJeux.objects.filter(id=1).first() # Get MoteurDeJeu with ID 1
+        if type_jeu is None:  
+            type_jeu = None # Set moteur_de_jeu to None if it doesn't exist
+        statut_partie = StatutPartie.objects.get(pk=1)
         partie = Partie.objects.create(
             date_debut=date_debut,
             date_fin=date_fin,
-            moteur_de_jeu=moteur_de_jeu,
-            statut=1,
+            type_jeu=type_jeu,
+            statut=statut_partie,
             gestionnaire_tour_id=1
         )
         # Get the Joueur instance associated with the current user using the 'user' field

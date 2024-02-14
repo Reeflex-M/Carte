@@ -26,11 +26,24 @@ class JoueurSerializer(serializers.ModelSerializer):
 
 # Game Serializer
 class PartieSerializer(serializers.ModelSerializer):
+    type_jeu = serializers.StringRelatedField()  # Utilisez StringRelatedField pour afficher le nom de la relation
+    nombre_joueur_max = serializers.SerializerMethodField()  # Ajoutez un champ personnalisé
     joueurs = JoueurSerializer(many=True, read_only=True)
     moteur_de_jeu_libelle = serializers.ReadOnlyField(source='moteur_de_jeu.libelle')
+    nbr_joueur = serializers.SerializerMethodField()  # Ajoutez un champ personnalisé pour le nombre de joueurs
+    type_jeu_nom = serializers.ReadOnlyField(source='type_jeu.nom')  # Ajoutez un champ pour le nom de type_jeu
+
     class Meta:
         model = Partie
-        fields = ['id', 'date_debut', 'date_fin', 'statut', 'joueurs','gestionnaire_tour_id','moteur_de_jeu_libelle']
+        fields = ['id', 'date_debut', 'date_fin', 'statut', 'joueurs', 'gestionnaire_tour_id', 'moteur_de_jeu_libelle', 'nombre_joueur_max', 'type_jeu', 'nbr_joueur', 'type_jeu_nom']
+
+    def get_nombre_joueur_max(self, obj):
+        # Assurez-vous que l'objet 'type_jeu' est défini et a un attribut 'nombre_joueur_max'
+        return obj.type_jeu.nombre_joueur_max if obj.type_jeu else None
+
+    def get_nbr_joueur(self, obj):
+        # Calculez le nombre de joueurs associés à la partie
+        return obj.joueurs.count()
 
 # Chat Serializer
 class ChatSerializer(serializers.ModelSerializer):

@@ -38,16 +38,25 @@ class StatutPartie(models.Model):
     def __str__(self):
         return self.nom
     
+    
+# Game type model
+class TypeJeux(models.Model):
+    nom = models.CharField(max_length=200)
+    logo = models.CharField(max_length=200)
+    path_splash = models.CharField(max_length=200)
+    nombre_joueur_max = models.IntegerField(default = 6)
+    moteurs_de_jeu = models.ManyToManyField('MoteurDeJeu')
+    
 # Game model
 class Partie(models.Model):
     id = models.AutoField(primary_key=True)
     date_debut = models.DateTimeField()
     date_fin = models.DateTimeField(null=True, blank=True)
-    statut = models.ForeignKey(StatutPartie, on_delete=models.PROTECT, default=1)
+    statut = models.ForeignKey(StatutPartie, on_delete=models.PROTECT)
     gestionnaire_tour_id = models.IntegerField(default=0)
     joueurs = models.ManyToManyField(Joueur, through='PartieJoueur') # link associative column
     chat_messages = models.ManyToManyField(Chat) # Game - Chat
-    moteur_de_jeu = models.ForeignKey(MoteurDeJeu, on_delete=models.SET_NULL, null=True) # Game - Game engine
+    type_jeu = models.ForeignKey(TypeJeux, on_delete=models.SET_NULL, null=True) # Game - Game engine
     decks = models.ManyToManyField('Deck') # Game - Deck
     
     def lancer_partie(self):
@@ -85,9 +94,3 @@ class Carte(models.Model):
     TypeJeux = models.ForeignKey('TypeJeux', on_delete=models.SET_NULL, null=True) # Card - Game type
     est_visible = models.BooleanField(default=False)
 
-# Game type model
-class TypeJeux(models.Model):
-    nom = models.CharField(max_length=200)
-    logo = models.CharField(max_length=200)
-    path_splash = models.CharField(max_length=200)
-    moteurs_de_jeu = models.ManyToManyField('MoteurDeJeu')
