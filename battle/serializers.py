@@ -3,13 +3,19 @@ from django.contrib.auth.models import User
 from .models import Partie, Joueur, Chat, Deck, Carte, MoteurDeJeu
 
 
-# User Serializer
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name']
-        
-        
+        fields = ['id', 'username', 'first_name', 'last_name']
+
+    # Permet de voir email si il est authentifié + son profil only
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        request = self.context.get('request')
+        if request and request.user.is_authenticated and request.user == instance:
+            representation['email'] = instance.email
+        return representation
+    
 # Player Serializer
 class JoueurSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
@@ -21,10 +27,10 @@ class JoueurSerializer(serializers.ModelSerializer):
 # Game Serializer
 class PartieSerializer(serializers.ModelSerializer):
     joueurs = JoueurSerializer(many=True, read_only=True)
-
+    moteur_de_jeu_libelle = serializers.ReadOnlyField(source='moteur_de_jeu.libelle')
     class Meta:
         model = Partie
-        fields = ['id', 'date_debut', 'date_fin', 'statut', 'joueurs','gestionnaire_tour_id']
+        fields = ['id', 'date_debut', 'date_fin', 'statut', 'joueurs','gestionnaire_tour_id','moteur_de_jeu_libelle']
 
 # Chat Serializer
 class ChatSerializer(serializers.ModelSerializer):

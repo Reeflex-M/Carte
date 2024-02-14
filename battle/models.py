@@ -30,13 +30,20 @@ class Chat(models.Model):
 class MoteurDeJeu(models.Model):
     date_creation = models.DateTimeField(auto_now_add=True)
     libelle = models.CharField(max_length=200)
+    
+class StatutPartie(models.Model):
+    id = models.AutoField(primary_key=True)
+    nom = models.CharField(max_length=200)
 
+    def __str__(self):
+        return self.nom
+    
 # Game model
 class Partie(models.Model):
     id = models.AutoField(primary_key=True)
     date_debut = models.DateTimeField()
     date_fin = models.DateTimeField(null=True, blank=True)
-    statut = models.CharField(max_length=200)
+    statut = models.ForeignKey(StatutPartie, on_delete=models.PROTECT, default=1)
     gestionnaire_tour_id = models.IntegerField(default=0)
     joueurs = models.ManyToManyField(Joueur, through='PartieJoueur') # link associative column
     chat_messages = models.ManyToManyField(Chat) # Game - Chat
@@ -44,9 +51,13 @@ class Partie(models.Model):
     decks = models.ManyToManyField('Deck') # Game - Deck
     
     def lancer_partie(self):
-        self.statut = 'en cours'
+        self.statut = 4
         self.save()
 
+
+
+    
+    
 # Game - Player association model
 class PartieJoueur(models.Model):
     partie = models.ForeignKey(Partie, on_delete=models.CASCADE)

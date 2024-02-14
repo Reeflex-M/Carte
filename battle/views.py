@@ -59,7 +59,7 @@ class CreatePartieView(GenericAPIView):
             date_debut=date_debut,
             date_fin=date_fin,
             moteur_de_jeu=moteur_de_jeu,
-            statut='joignable',
+            statut=1,
             gestionnaire_tour_id=1
         )
         # Get the Joueur instance associated with the current user using the 'user' field
@@ -91,6 +91,11 @@ class JoinPartieView(APIView):
         partie_joueur.rang_inscription = list(partie.joueurs.all()).index(joueur) + 1
         partie_joueur.ordre = 1
         partie_joueur.save()
+        
+        # Check if the number of players has reached  6
+        if len(partie.joueurs.all()) >=  6:
+            partie.statut = 3
+            partie.save()
         return Response({"message": "User joined party successfully"}, status=200)
 
 
@@ -225,7 +230,7 @@ class JoignablePartieListView(generics.ListAPIView):
     serializer_class = PartieSerializer
 
     def get_queryset(self):
-        return Partie.objects.filter(statut='joignable')
+        return Partie.objects.filter(statut=1)
 
 # Views entity Chat
 class ChatViewSet(viewsets.ModelViewSet):
