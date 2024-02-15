@@ -60,9 +60,9 @@ class Partie(models.Model):
     decks = models.ManyToManyField('Deck') # Game - Deck
     
     def lancer_partie(self):
-        self.statut = 4
-        self.save()
-
+       statut_partie = StatutPartie.objects.get(pk=4)  # Obtenez l'instance de StatutPartie avec PK  4
+       self.statut = statut_partie
+       self.save()
 
 
     

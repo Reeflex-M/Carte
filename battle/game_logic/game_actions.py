@@ -36,17 +36,19 @@ def get_all_players(partie_id):
     except ObjectDoesNotExist:
         return []
     
-@database_sync_to_async   
+@database_sync_to_async
 def update_game_state(player, game_state):
     game_state["current_turn"]["player_id"] = player.id
-    players = get_all_players()
+    players = get_all_players(partie_id=player.partie_id)  # Supprimez 'await'  ici
     # Update the players list with current information
-    game_state["players"] = [{
-        "id": p.id,
-        "name": p.name,
-        "score": p.score,
-        "hand": p.hand # Assuming hand is a list of cards in hand
-    } for p in players]
+    game_state["players"] = [
+        {
+            "id": p.joueur.id,
+            "name": p.joueur.pseudo,
+            "score": p.joueur.nbr_victoire,  # Assurez-vous que 'score' est un champ valide dans votre modèle Joueur
+            "hand": p.joueur.deck.cartes.all()  # Assurez-vous que 'hand' est un champ valide dans votre modèle Joueur
+        } for p in players
+    ]
 
     # Update the played cards on the table
     # You need to define how to get the top card and played cards

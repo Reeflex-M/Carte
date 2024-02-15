@@ -13,7 +13,7 @@ class GameConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def get_partie(self, partie_id):
-        return Partie.objects.filter(id=partie_id, statut='en cours').first()
+        return Partie.objects.filter(id=partie_id, statut=4).first()
 
     @database_sync_to_async
     def create_chat_message(self, message, joueur_id):

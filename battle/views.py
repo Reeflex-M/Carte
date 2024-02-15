@@ -70,7 +70,7 @@ class CreatePartieView(GenericAPIView):
         # Call JoinPartieView function with the Joueur instance
         join_partie_view = JoinPartieView()
         join_partie_view.post(request, partie.id) # Corrected call to post method
-        return Response({"message": "Partie créée avec succès"}, status=201)
+        return Response({"message": "Partie créée avec succès", "partie_id": partie.id}, status=201)
     
 
 class JoinPartieView(APIView):
@@ -258,6 +258,9 @@ class MoteurDeJeuViewSet(viewsets.ModelViewSet):
     serializer_class = MoteurDeJeuSerializer
 
 # Auth views
+from rest_framework.authtoken.models import Token
+from .models import Joueur
+
 class LoginView(APIView):
     """Login view"""
     def post(self, request, format=None):
@@ -268,7 +271,13 @@ class LoginView(APIView):
         if user is not None:
             login(request, user)
             token, created = Token.objects.get_or_create(user=user)
-            return Response({"token": token.key})
+            # Retrieve the Joueur instance associated with the user
+            joueur = Joueur.objects.filter(user=user).first()
+            if joueur:
+                # Include the Joueur's ID in the response
+                return Response({"token": token.key, "joueur_id": joueur.id})
+            else:
+                return Response({"error": "Player not found for this user"}, status=status.HTTP_404_NOT_FOUND)
         else:
             return Response({"error": "Wrong Credentials"}, status=status.HTTP_400_BAD_REQUEST)
 
