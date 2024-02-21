@@ -88,7 +88,7 @@ class GameConsumer(AsyncWebsocketConsumer):
             logger.debug("Next player after starting turn: %s", next_player)
             current_game_state = await get_game_state()  # Call the get_game_state function to get the default state
             logger.debug("Current game state: %s", current_game_state)
-            updated_game_state = await update_game_state(next_player, current_game_state)  # Use 'await' here
+            updated_game_state = await update_game_state(next_player, current_game_state,partie_id)  # Use 'await' here
             logger.debug("Updated game state: %s", updated_game_state)
             await self.send(text_data=json.dumps({
                 'message': 'Turn started',

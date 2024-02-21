@@ -1,9 +1,9 @@
 # game.py
-
-from ..models import Partie, PartieJoueur, Joueur
+import logging
+from ..models import Partie, PartieJoueur, Joueur, Deck
 from channels.db import database_sync_to_async
 from django.core.exceptions import ObjectDoesNotExist
-
+logging.basicConfig(level=logging.DEBUG)
 
 # Determine prochain joueur
 
@@ -33,17 +33,27 @@ def get_all_players(partie_id):
         return []
 
 @database_sync_to_async
-def get_partie_joueur(joueur_id):
-    return PartieJoueur.objects.filter(joueur_id=joueur_id).first()
+def get_partie_joueur(joueur_id, partie_id):
+        partie_joueur = PartieJoueur.objects.filter(joueur_id=joueur_id, partie_id=partie_id).first()
+        return partie_joueur
 
 @database_sync_to_async
 def get_player_info(player, partie_id):
+    logging.debug(f"id partie_id {partie_id}")
     # Retrieve the PartieJoueur instance for the current player and game
     partie_joueur = PartieJoueur.objects.get(joueur_id=player.joueur.id, partie_id=partie_id)
-    # Retrieve the Deck associated with the PartieJoueur through the Partie model
-    deck = partie_joueur.partie.decks.first()
+    # Retrieve the Partie instance for the current game
+    partie = Partie.objects.get(id=partie_id)
+    # Retrieve the Deck associated with the current player and game
+    deck = partie.decks.filter(joueur=player.joueur, partie=partie).first()
+    if not deck:
+        raise ValueError("No deck associated with the player for the current game.")
     # Retrieve all cards associated with the deck
     hand = [card.id for card in deck.cartes.all()]
+    # Log the deck ID and the hand of cards
+    logging.debug(f"id of the game 1 {partie.id}")
+    logging.debug(f"Deck for player {player.joueur.id}: {deck.id}")
+    logging.debug(f"Hand for player {player.joueur.id}: {hand}")
     return {
         "id": player.joueur.id,
         "name": player.joueur.pseudo,
@@ -51,8 +61,6 @@ def get_player_info(player, partie_id):
         "hand": hand
     }
     
-
-
 # Pour récupérer le deck du joueur pour la partie actuelle
 def get_player_deck_for_partie(joueur_id, partie_id):
     try:

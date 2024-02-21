@@ -30,27 +30,19 @@ async def determine_next_player(partie: Partie):
 
 
 
-async def update_game_state(player, game_state):
+async def update_game_state(player, game_state, partie_id):
     game_state.setdefault('current_turn', {})
     game_state["current_turn"]["player_id"] = player.id
-
-    # Retrieve the 'partie_id' from the related PartieJoueur instance
-    partie_joueur = await get_partie_joueur(player.id)
-    if partie_joueur:
-        partie_id = partie_joueur.partie_id
-        players = await get_all_players(partie_id=partie_id)
-        # Call get_player_info with the partie_id for each player
+    if partie_id is not None:
+        players = await get_all_players(partie_id=partie_id) #Get All Player
         game_state["players"] = [
-            await get_player_info(p, partie_id) for p in players
+            await get_player_info(p, partie_id) for p in players #Display info
         ]
 
         # Check if the game is over
         # if check_game_over(game_state):
         #     game_state["game_over"] = True
     else:
-        # Handle the case where the Joueur is not associated with a PartieJoueur instance
-        # This could be an error condition or a case where the Joueur is not yet part of a game
-        # You may want to log an error or raise an exception here
         pass
 
     return game_state
