@@ -90,7 +90,7 @@ class JoinPartieView(APIView):
         partie.joueurs.add(joueur)
         partie_joueur = PartieJoueur.objects.get(joueur=joueur, partie=partie)
         partie_joueur.rang_inscription = list(partie.joueurs.all()).index(joueur) + 1
-        partie_joueur.ordre = 1
+        partie_joueur.ordre = 0
         partie_joueur.save()
         
         # Check if the number of players has reached  6

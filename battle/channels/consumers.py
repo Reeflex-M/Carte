@@ -2,14 +2,18 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 import json
 from channels.db import database_sync_to_async
 from ..models import Partie, Chat, Joueur
-from ..game_logic.game_actions import determine_next_player, update_game_state, pass_turn, play_card, prepare_next_turn
+from ..game_logic.game_actions import determine_next_player, get_game_state,  update_game_state, pass_turn, play_card, prepare_next_turn
+import logging
+
+logger = logging.getLogger(__name__)
 
 class GameConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         await self.accept()
+        logger.info("WebSocket connection established.")
 
     async def disconnect(self, close_code):
-        pass
+        logger.info("WebSocket connection closed with code: %s", close_code)
 
     @database_sync_to_async
     def get_partie(self, partie_id):
@@ -22,35 +26,40 @@ class GameConsumer(AsyncWebsocketConsumer):
         chat_message.save()
         return chat_message
 
-    @database_sync_to_async 
+    @database_sync_to_async
+    def add_chat_message_to_partie(self, chat_message, partie):
+        partie.chat_messages.add(chat_message)
+        partie.save()
+
+    @database_sync_to_async
     def update_partie(self, partie):
         partie.save()
 
     async def receive(self, text_data):
+        logger.debug("Received WebSocket message: %s", text_data)
         text_data_json = json.loads(text_data)
         message = text_data_json['message']
         partie_id = text_data_json.get('partie_id')
         joueur_id = text_data_json.get('joueur_id')
 
-        # Récupérer la partie
+        # Retrieve the game
         partie = await self.get_partie(partie_id)
         if not partie:
+            logger.error("Game not found or not in progress.")
             await self.send(text_data=json.dumps({
                 'message': 'Error',
-                'detail': 'Partie introuvable ou non en cours.'
+                'detail': 'Game not found or not in progress.'
             }))
             return
 
-        # Si le message est un message de chat
+        # Handle chat messages
         if message.startswith('chat:'):
-            # Enregistrer le message dans la base de données
+            logger.debug("Handling chat message.")
+            # Save the chat message to the database
             chat_message = await self.create_chat_message(message[5:], joueur_id)
-
-            # Associer le message de chat à la partie
-            partie.chat_messages.add(chat_message)
-            await self.update_partie(partie)
-
-            # Envoyer le message à tous les clients connectés à cette partie
+            # Associate the chat message with the game
+            await self.add_chat_message_to_partie(chat_message, partie)
+            # Send the chat message to all connected clients
             await self.send(text_data=json.dumps({
                 'message': 'New chat message',
                 'chat_message': chat_message.message,
@@ -58,9 +67,12 @@ class GameConsumer(AsyncWebsocketConsumer):
             }))
 
         elif message == 'pass_turn':
-            # Logique pour passer le tour
-            next_player = pass_turn() # Fonction hypothétique pour passer le tour
-            game_state = update_game_state(next_player) # Fonction hypothétique pour mettre à jour l'état du jeu
+            logger.debug("Processing pass turn action.")
+            # Logic to pass the turn
+            next_player = await pass_turn(partie)
+            logger.debug("Next player after passing turn: %s", next_player)
+            game_state = await update_game_state(next_player)
+            logger.debug("Updated game state: %s", game_state)
             await self.send(text_data=json.dumps({
                 'message': 'Turn passed',
                 'turn': {
@@ -70,11 +82,30 @@ class GameConsumer(AsyncWebsocketConsumer):
                 'game_state': game_state
             }))
 
+        elif message == 'start_turn':
+            logger.debug("Processing start turn action.")
+            next_player = await determine_next_player(partie)
+            logger.debug("Next player after starting turn: %s", next_player)
+            current_game_state = await get_game_state()  # Call the get_game_state function to get the default state
+            logger.debug("Current game state: %s", current_game_state)
+            updated_game_state = await update_game_state(next_player, current_game_state)  # Use 'await' here
+            logger.debug("Updated game state: %s", updated_game_state)
+            await self.send(text_data=json.dumps({
+                'message': 'Turn started',
+                'turn': {
+                    'player': next_player.pseudo,  # Use the correct attribute for the player's name
+                    'state': 'active'
+                },
+                'game_state': updated_game_state
+            }))
+
         elif message == 'play_card':
-            # Extraire les détails de la carte jouée à partir des données du message
+            logger.debug("Processing play card action.")
+            # Extract card details from the message data
             played_card = text_data_json['card']
-            # Logique pour jouer la carte
-            updated_game_state = play_card(played_card) # Fonction hypothétique pour jouer la carte
+            # Logic to play the card
+            updated_game_state = await play_card(played_card, partie)
+            logger.debug("Updated game state after playing card: %s", updated_game_state)
             await self.send(text_data=json.dumps({
                 'message': 'Card played',
                 'card': played_card,
@@ -82,11 +113,14 @@ class GameConsumer(AsyncWebsocketConsumer):
             }))
 
         elif message == 'end_turn':
-            # Logique pour commencer un tour
+            logger.debug("Processing end turn action.")
+            # Logic to end a turn
             next_player = await determine_next_player(partie)
-            # Initialisez l'état du jeu si nécessaire, sinon utilisez l'état existant
-            game_state = {}  # Ou utilisez une valeur par défaut ou récupérez l'état existant
-            game_state = await update_game_state(next_player, game_state)  # Utilisez 'await'   ici
+            logger.debug("Next player after ending turn: %s", next_player)
+            # Initialize the game state if necessary, otherwise use the existing state
+            game_state = {}  # Or use a default value or retrieve the existing state
+            game_state = await update_game_state(next_player, game_state)
+            logger.debug("Updated game state: %s", game_state)
             await self.send(text_data=json.dumps({
                 'message': 'Turn ended',
                 'turn': {

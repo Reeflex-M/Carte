@@ -91,6 +91,7 @@ class Carte(models.Model):
     NomCarte = models.CharField(max_length=20)
     front_image_path = models.CharField(max_length=200)
     back_image_path = models.CharField(max_length=200)
+    puissance = models.IntegerField(null = True)
     TypeJeux = models.ForeignKey('TypeJeux', on_delete=models.SET_NULL, null=True) # Card - Game type
     est_visible = models.BooleanField(default=False)
 
