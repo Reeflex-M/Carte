@@ -190,15 +190,25 @@ class LancerPartieView(APIView):
         try:
             partie = Partie.objects.get(id=partie_id)
             partie.lancer_partie()
-            if len(partie.joueurs.all()) == 1:
+            if len(partie.joueurs.all()) ==   1:
                 joueur = Joueur.objects.get(id=1) # Assurez-vous que l'ID est correct
                 partie.joueurs.add(joueur)
             update_order_view = UpdateOrderInPartieJoueurView()
             update_order_view.post(request, partie_id)
+            if partie.type_jeu.id ==   1:
+                logger.debug("type jeu id lancer: %s",partie.type_jeu)
+                # Trouver le joueur avec le plus grand 'ordre'
+                joueur_actuel = PartieJoueur.objects.filter(partie_id=partie.id).order_by('-ordre').first().joueur
+                logger.debug("joueur actuelle: %s",joueur_actuel)
+                partie.joueur_actuel = joueur_actuel
+                partie.save()
             return Response({"message": "La partie a été lancée avec succès"}, status=200)
         except Partie.DoesNotExist:
             return Response({"error": "Partie not found"}, status=status.HTTP_404_NOT_FOUND)
-
+        except PartieJoueur.DoesNotExist:
+            return Response({"error": "No player found with the highest order"}, status=status.HTTP_404_NOT_FOUND)
+        
+        
 class BaseImageUrlView(APIView):
     """Return the base image URL"""
     def get(self, request, *args, **kwargs):

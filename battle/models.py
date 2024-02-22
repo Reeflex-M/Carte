@@ -58,6 +58,7 @@ class Partie(models.Model):
     chat_messages = models.ManyToManyField(Chat) # Game - Chat
     type_jeu = models.ForeignKey(TypeJeux, on_delete=models.SET_NULL, null=True) # Game - Game engine
     decks = models.ManyToManyField('Deck') # Game - Deck
+    joueur_actuel = models.ForeignKey(Joueur, on_delete=models.SET_NULL, null=True, related_name='parties_actuelles')
     
     def lancer_partie(self):
        statut_partie = StatutPartie.objects.get(pk=4)  # Obtenez l'instance de StatutPartie avec PK  4

@@ -41,6 +41,7 @@ class GameConsumer(AsyncWebsocketConsumer):
         message = text_data_json['message']
         partie_id = text_data_json.get('partie_id')
         joueur_id = text_data_json.get('joueur_id')
+        current_game_state = {}
 
         # Retrieve the game
         partie = await self.get_partie(partie_id)
@@ -69,16 +70,17 @@ class GameConsumer(AsyncWebsocketConsumer):
         # ...
         elif message == 'pass_turn':
             logger.debug("Processing pass turn action.")
+
             next_player = await determine_next_player(partie)
             logger.debug("Next player after passing turn: %s", next_player)
             # Initialize current_game_state if it's not already defined
-            current_game_state = current_game_state or {}
+            
             game_state = await update_game_state(next_player, current_game_state, partie_id)
             logger.debug("Updated game state: %s", game_state)
             await self.send(text_data=json.dumps({
                 'message': 'Turn passed',
                 'turn': {
-                    'player': next_player.name,
+                    'player': next_player.pseudo,
                     'state': 'waiting'
                 },
                 'game_state': game_state

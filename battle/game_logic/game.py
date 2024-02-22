@@ -6,31 +6,33 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Determine prochain joueur
 
 @database_sync_to_async
 def determine_mode_horaire(partie):
-    current_order = PartieJoueur.objects.filter(partie_id=partie.id).order_by('ordre').first()
-    if current_order is None:
-        raise ValueError("No current order found for the game.")
-    current_order = current_order.ordre
-    total_players = PartieJoueur.objects.filter(partie_id=partie.id).count()
-    if current_order > total_players:
-        current_order =  1  # Reset to the first player if the current order exceeds the total number of players
-    next_player = PartieJoueur.objects.filter(partie_id=partie.id, ordre=current_order).first()
-    if next_player is None:
-        raise ValueError("No next player found for the game.")
+    '''Determine le prochain joueur'''
+    current_partie_joueur = PartieJoueur.objects.get(partie=partie, joueur=partie.joueur_actuel)
+    logger.debug("current partie joueur: %s", current_partie_joueur)
+    logger.debug("first player: %s", partie.joueur_actuel)
+    logger.debug("current partie ordre: %s", current_partie_joueur.ordre)
     
-    # Update the order of the next player
-    next_player_order = current_order +  1
-    logger.debug("next player order: %s", next_player_order)
-    PartieJoueur.objects.filter(partie_id=partie.id, ordre=next_player_order).update(ordre=current_order)
+    # Check if this is the first turn of the game
+    if current_partie_joueur.ordre ==   1:
+        # On the first turn, the next player is the one with 'ordre'   2
+        next_partie_joueur = PartieJoueur.objects.filter(partie=partie, ordre=2).first()
+    else:
+        # For subsequent turns, increment the 'ordre' and find the next player
+        next_ordre = current_partie_joueur.ordre +   1
+        next_partie_joueur = PartieJoueur.objects.filter(partie=partie, ordre=next_ordre).first()
     
-    # Update the current order to the next player's order
-    current_order = next_player_order
-    logger.debug("which one is next: %s", current_order)
+    if not next_partie_joueur:
+        # If there's no next player with the calculated 'ordre' value, loop back to the first player
+        next_partie_joueur = PartieJoueur.objects.filter(partie=partie).order_by('ordre').first()
     
-    return next_player.joueur
+    partie.joueur_actuel = next_partie_joueur.joueur
+    partie.save()
+    logger.debug("second player: %s", partie.joueur_actuel)
+
+    return partie.joueur_actuel
 
 
 
