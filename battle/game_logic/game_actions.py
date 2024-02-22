@@ -22,7 +22,8 @@ def get_game_state():
 
 
 async def determine_next_player(partie: Partie):
-    print("Type de jeu ID:", partie.type_jeu_id)  
+    print("Type de jeu ID:", partie.type_jeu_id) 
+    print("partie:", partie) 
     if partie.type_jeu_id ==  1: 
         return await determine_mode_horaire(partie)  
     else:

@@ -1,26 +1,36 @@
 # game.py
-import logging
 from ..models import Partie, PartieJoueur, Joueur, Deck
 from channels.db import database_sync_to_async
 from django.core.exceptions import ObjectDoesNotExist
-logging.basicConfig(level=logging.DEBUG)
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Determine prochain joueur
 
 @database_sync_to_async
 def determine_mode_horaire(partie):
-    current_order = PartieJoueur.objects.filter(partie_id=partie.id).order_by('-ordre').first()
+    current_order = PartieJoueur.objects.filter(partie_id=partie.id).order_by('ordre').first()
     if current_order is None:
         raise ValueError("No current order found for the game.")
-    current_order = current_order.ordre +  1
+    current_order = current_order.ordre
     total_players = PartieJoueur.objects.filter(partie_id=partie.id).count()
     if current_order > total_players:
         current_order =  1  # Reset to the first player if the current order exceeds the total number of players
     next_player = PartieJoueur.objects.filter(partie_id=partie.id, ordre=current_order).first()
     if next_player is None:
         raise ValueError("No next player found for the game.")
+    
+    # Update the order of the next player
+    next_player_order = current_order +  1
+    logger.debug("next player order: %s", next_player_order)
+    PartieJoueur.objects.filter(partie_id=partie.id, ordre=next_player_order).update(ordre=current_order)
+    
+    # Update the current order to the next player's order
+    current_order = next_player_order
+    logger.debug("which one is next: %s", current_order)
+    
     return next_player.joueur
-
 
 
 
@@ -51,9 +61,9 @@ def get_player_info(player, partie_id):
     # Retrieve all cards associated with the deck
     hand = [card.id for card in deck.cartes.all()]
     # Log the deck ID and the hand of cards
-    logging.debug(f"id of the game 1 {partie.id}")
-    logging.debug(f"Deck for player {player.joueur.id}: {deck.id}")
-    logging.debug(f"Hand for player {player.joueur.id}: {hand}")
+    #logging.debug(f"id of the game 1 {partie.id}")
+    #logging.debug(f"Deck for player {player.joueur.id}: {deck.id}")
+    #logging.debug(f"Hand for player {player.joueur.id}: {hand}")
     return {
         "id": player.joueur.id,
         "name": player.joueur.pseudo,

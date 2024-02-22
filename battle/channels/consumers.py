@@ -66,12 +66,14 @@ class GameConsumer(AsyncWebsocketConsumer):
                 'joueur_id': joueur_id
             }))
 
+        # ...
         elif message == 'pass_turn':
             logger.debug("Processing pass turn action.")
-            # Logic to pass the turn
-            next_player = await pass_turn(partie)
+            next_player = await determine_next_player(partie)
             logger.debug("Next player after passing turn: %s", next_player)
-            game_state = await update_game_state(next_player)
+            # Initialize current_game_state if it's not already defined
+            current_game_state = current_game_state or {}
+            game_state = await update_game_state(next_player, current_game_state, partie_id)
             logger.debug("Updated game state: %s", game_state)
             await self.send(text_data=json.dumps({
                 'message': 'Turn passed',
@@ -81,9 +83,10 @@ class GameConsumer(AsyncWebsocketConsumer):
                 },
                 'game_state': game_state
             }))
+        # ...
 
         elif message == 'start_turn':
-            logger.debug("Processing start turn action.")
+            #logger.debug("Processing start turn action.")
             next_player = await determine_next_player(partie)
             logger.debug("Next player after starting turn: %s", next_player)
             current_game_state = await get_game_state()  # Call the get_game_state function to get the default state
